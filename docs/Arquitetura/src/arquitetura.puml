@@ -1,0 +1,31 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define DEVICONS2 https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons2
+!define SPRITES https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/v1.0/sprites
+
+!include DEVICONS2/java.puml
+!include DEVICONS2/flutter.puml
+!include DEVICONS/postgresql.puml
+!include DEVICONS/redis.puml
+
+Person(user, "Usuário")
+Container(client, "Aplicação", "Flutter", "A interface principal que o usuário vai utilizar em múltiplas plataformas", $sprite="flutter") 
+
+System_Boundary(c1, "Sistema DocsSearch") {    
+    Container(api, "Backend", "Java Spring", "Gerencia a lógica de negócios e interage com os bancos de dados", $sprite="java")
+    ContainerDb(postgres_db, "Database", "PostgreSQL", "Persiste as informações e interações dos usuários", $sprite="postgresql")
+    ContainerDb(redis_cache, "Cache", "Redis", "Armazena dados temporários para otimizar o desempenho", $sprite="redis")
+}
+System_Ext(mail_system, "Sistema de Email")
+
+Rel_Down(user, client, "Usa")
+Rel_Down(client, api, "Consome API", "https")
+Rel_R(api, postgres_db, "Recupera/Persiste")
+Rel_R(api, redis_cache, "Lê/Escreve cache")
+Rel_L(api, mail_system, "Cria e-mail")
+Rel_Up(mail_system, user, "Envia e-mail")
+
+SHOW_LEGEND()
+@enduml

@@ -1,0 +1,73 @@
+@startuml
+!define Table(x) class x << (T,#FFAAAA) >>
+!define PrimaryKey(x, type) <b><u>x</u></b> : <i>type</i>
+!define ForeignKey(x, type) <u>x</u> : <i>type</i>
+!define OneToMany(x) "1" --{ "0..*" x
+!define ManyToOneDirected(x, direction) "0..*" }-direction- "1" x
+!define OneToManyDirected(x, direction) "1" -direction-{ "0..*" x
+!define CompositionOneToMany(x) "1" *-- "0..*" x
+!define CompositionOneToManyDirected(x, direction) "1" *-direction- "0..*" x
+
+Table(Usuario) {
+  .. Chave Primária ..
+  + PrimaryKey(id, INT)
+  .. Atributos ..
+  + nome_usuario : string
+  + email : string
+  + senha : string
+  + criado_em : datetime
+  .. Relacionamentos ..
+  + pesquisas : Pesquisa[]
+  + sessoes : Sessao[]
+}
+
+Table(Pesquisa) {
+  .. Chave Primária ..
+  + PrimaryKey(id, INT)
+  .. Atributos ..
+  + algoritmo : string // ex: BM25, Similaridade Cosseno, Híbrido
+  + texto_consulta : string
+  + criado_em : datetime
+  .. Chaves Estrangeiras ..
+  ForeignKey(usuario_id, INT)
+  .. Relacionamentos ..
+  + passagens : Passagem[] via PesquisaPassagem
+}
+
+Table(Passagem) {
+  .. Chave Primária ..
+  + PrimaryKey(id, INT)
+  .. Atributos ..
+  + texto_passagem : string
+  + url : string
+  .. Relacionamentos ..
+  + pesquisas : Pesquisa[] via PesquisaPassagem
+}
+
+Table(Sessao) {
+  .. Chave Primária ..
+  + PrimaryKey(id, INT)
+  .. Atributos ..
+  + token_sessao : string
+  + criado_em : datetime
+  + expira_em : datetime
+  // Nota: Dados persistentes armazenados no PostgreSQL; cache temporário no Redis.
+  .. Chaves Estrangeiras ..
+  ForeignKey(usuario_id, INT)
+}
+
+Table(PesquisaPassagem) {
+  .. Atributos ..
+  + pontuacao : float // Pontuação para ranqueamento dos resultados
+  .. Chaves Estrangeiras ..
+  ForeignKey(pesquisa_id, INT)
+  ForeignKey(passagem_id, INT)
+}
+
+Usuario CompositionOneToManyDirected(Pesquisa, right) : realiza >
+Usuario CompositionOneToManyDirected(Sessao, right) : possui >
+Pesquisa ManyToOneDirected(Usuario, up) : realizada por >
+Pesquisa CompositionOneToManyDirected(PesquisaPassagem, right) : retorna >
+Passagem ManyToOneDirected(PesquisaPassagem, up) : pertence a >
+Sessao ManyToOneDirected(Usuario, up) : pertence a >
+@enduml
